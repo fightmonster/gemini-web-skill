@@ -10,18 +10,18 @@ Works with **OpenClaw** and **Claude Code**.
 
 ```bash
 # Option 1: From GitHub
-openclaw skills install https://github.com/luojun/gemini-skill
+openclaw skills install https://github.com/luojun/gemini-web-skill
 
 # Option 2: Copy manually
-cp -r gemini-skill ~/.openclaw/skills/gemini
+cp -r gemini-web-skill ~/.openclaw/skills/gemini-web-skill
 ```
 
 ### Claude Code
 
 ```bash
 # Copy to your project's .claude/skills/
-cp -r gemini-skill .claude/skills/gemini
-chmod +x .claude/skills/gemini/scripts/*.sh
+cp -r gemini-web-skill .claude/skills/gemini-web-skill
+chmod +x .claude/skills/gemini-web-skill/scripts/*.sh
 ```
 
 ### MCP Server Setup
