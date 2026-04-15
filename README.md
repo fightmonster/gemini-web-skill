@@ -1,8 +1,8 @@
 # Gemini Web Creator Skill
 
-Generate AI images, music, and videos via Google Gemini using Chrome DevTools MCP (browser-cdp).
+Generate AI images, music, and videos via Google Gemini using OpenClaw's built-in **browser-cdp** skill.
 
-Works with **OpenClaw** and **Claude Code**.
+Works with **OpenClaw**.
 
 ## Install
 
@@ -10,15 +10,8 @@ Works with **OpenClaw** and **Claude Code**.
 # Install this skill (OpenClaw)
 npx skills add https://github.com/fightmonster/gemini-web-skill
 
-# Configure Chrome DevTools MCP in .mcp.json
-{
-  "mcpServers": {
-    "chrome-devtools": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/chrome-devtools-mcp@latest"]
-    }
-  }
-}
+# Ensure browser-cdp dependencies are installed
+pip install websockets
 ```
 
 ## Usage
@@ -87,16 +80,16 @@ Tip: Describe 3-5 distinct actions for best results. Use cinematography terms li
 
 ## First Time
 
-On first use, the skill launches a new Chrome instance with a fresh profile. It detects the login page and shows instructions. After logging into your Google account, the profile is saved — subsequent uses are automatic.
+On first use, browser-cdp launches Chrome with your real profile. If Gemini shows a login page, the skill detects this and shows instructions. After logging into your Google account, subsequent uses are automatic.
 
 ## How It Works
 
 ```
-Agent → Chrome DevTools MCP → Chrome (CDP) → Gemini Web UI
+Agent → browser-cdp (Python SDK) → Chrome (CDP) → Gemini Web UI
 ```
 
-1. `start_chrome.sh` launches Chrome with remote debugging (port 9222)
-2. Agent navigates to Gemini via MCP tools (`navigate_page`, `click`, `fill`)
+1. `browser_launcher` connects to Chrome (reuses user profile with login state)
+2. Agent calls browser-cdp API (`click_by_ref`, `type_text`, `accessibility_tree`)
 3. Selects Pro mode, submits generation prompt
 4. Waits for completion, clicks Gemini UI download buttons
 5. Files saved to `~/Downloads/` by Chrome
@@ -105,17 +98,18 @@ Agent → Chrome DevTools MCP → Chrome (CDP) → Gemini Web UI
 
 | Dependency | Required? | Notes |
 |---|---|---|
+| browser-cdp skill | Yes | Built-in with OpenClaw |
 | Google Chrome | Yes | Browser |
-| Chrome DevTools MCP Server | Yes | `@anthropic-ai/chrome-devtools-mcp` |
-| Python 3 + websockets | Optional | Only for video mode file upload |
+| Python 3 + websockets | Yes | CDP communication |
 
 No ffmpeg needed. Gemini UI provides direct MP3/MP4/PNG download.
 
 ## Version
 
-**1.3.0** — Use Chrome DevTools MCP (browser-cdp) for browser automation
+**1.3.0** — Use OpenClaw built-in browser-cdp skill
 
-- Auto-start Chrome via `start_chrome.sh` with persistent profile
+- browser-cdp Python SDK for browser automation (not MCP or CLI)
+- Reuses user Chrome profile with login state
 - Image generation with UI download
 - Music generation with MP3/MP4 download
 - Video generation with reference file upload support
