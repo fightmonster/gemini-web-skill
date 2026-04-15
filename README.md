@@ -106,7 +106,7 @@ No ffmpeg needed. Gemini UI provides direct MP3/MP4/PNG download.
 
 ## Version
 
-**1.3.0** — Use OpenClaw built-in browser-cdp skill
+**1.0.5** — Use OpenClaw built-in browser-cdp skill
 
 - browser-cdp Python SDK for browser automation (not MCP or CLI)
 - Reuses user Chrome profile with login state

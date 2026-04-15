@@ -1,6 +1,6 @@
 ---
 name: gemini-web-skill
-version: 1.3.0
+version: 1.0.5
 description: "Generate AI images, music, and videos via Google Gemini using browser-cdp skill. Use when the user wants to generate an image, create AI art, generate music, create a song, or generate a video with Gemini. NOT for Gemini API calls, Gemini CLI usage, or non-creative tasks. Supports image (default), music, and video generation modes with automatic Pro mode selection and local file download."
 metadata: {"openclaw":{"emoji":"🎨","requires":{"bins":["python3"]},"os":["darwin","linux","win32"]}}
 ---
