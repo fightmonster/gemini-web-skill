@@ -89,11 +89,10 @@ start_chrome.sh → Chrome (CDP) → browser-cdp (Python SDK) → Gemini Web UI
 ```
 
 1. `start_chrome.sh` launches Chrome with persistent profile (Google login preserved)
-2. browser-cdp connects to the running Chrome via CDP
-3. Agent calls browser-cdp API (`click_by_ref`, `type_text`, `accessibility_tree`)
-4. Selects Pro mode, submits generation prompt
-5. Waits for completion, clicks Gemini UI download buttons
-6. Files saved to `~/Downloads/` by Chrome
+2. browser-cdp connects to the running Chrome via CDP, operates Gemini via Python API
+3. Selects Pro mode, submits generation prompt
+4. Waits for completion, clicks Gemini UI download buttons
+5. Files saved to `~/Downloads/` by Chrome
 
 ## Prerequisites
 

@@ -22,9 +22,8 @@ start_chrome.sh → Chrome (CDP port 9222) → browser-cdp Python SDK → Gemini
 ```
 
 1. `start_chrome.sh` launches Chrome with remote debugging and persistent profile (Google login preserved)
-2. browser-cdp connects to the running Chrome via CDP
-3. Agent calls browser-cdp Python API to operate Gemini
-4. Files saved to `~/Downloads/`
+2. browser-cdp connects to the running Chrome via CDP, operates Gemini via Python API
+3. Files saved to `~/Downloads/`
 
 ## Arguments
 
