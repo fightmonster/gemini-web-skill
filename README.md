@@ -69,7 +69,7 @@ Describe **multiple sequential actions** for smooth results. Each sentence = one
 /gemini-web-skill video a cat jumps onto a piano, walks across the keys creating random notes, then curls up and falls asleep on the warm piano lid
 
 # With reference image
-/gemini-web-skill video ~/photos/cat.png 这只猫伸了个懒腰，跳下沙发，慢慢走向镜头
+/gemini-web-skill video /path/to/your/image.jpg 这只猫伸了个懒腰，跳下沙发，慢慢走向镜头
 
 # Cinematic style
 /gemini-web-skill video 雨夜城市天际线延时摄影，乌云翻涌，闪电划过夜空，最后雨停露出星空
