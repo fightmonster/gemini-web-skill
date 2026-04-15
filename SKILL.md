@@ -18,12 +18,12 @@ Generate images, music, and videos via Google Gemini, using the built-in **brows
 ## How It Works
 
 ```
-Agent → browser-cdp Python SDK → Chrome (CDP) → Gemini Web UI
+start_chrome.sh → Chrome (CDP port 9222) → browser-cdp Python SDK → Gemini Web UI
 ```
 
-1. `browser_launcher` launches Chrome (reuses user profile with login state)
-2. Agent calls browser-cdp Python API to control Chrome
-3. Gemini UI generates content, agent clicks download buttons
+1. `start_chrome.sh` launches Chrome with remote debugging and persistent profile (Google login preserved)
+2. browser-cdp connects to the running Chrome via CDP
+3. Agent calls browser-cdp Python API to operate Gemini
 4. Files saved to `~/Downloads/`
 
 ## Arguments
@@ -39,34 +39,38 @@ Parse `$ARGUMENTS`:
 
 Generate a filesystem-safe output name from the prompt (slugify, max 40 chars).
 
-## Step 0: Setup browser-cdp
+## Step 0: Start Chrome
 
-Import browser-cdp scripts and connect to Chrome:
+Run `start_chrome.sh` to launch Chrome with remote debugging and persistent profile:
+
+```bash
+bash {baseDir}/scripts/start_chrome.sh
+```
+
+This starts Chrome on CDP port 9222 with profile at `~/.gemini-chrome-profile`. The profile preserves Google login state across uses.
+
+Wait 3 seconds after launch for Chrome to be ready.
+
+## Step 0.1: Connect via browser-cdp
+
+Import browser-cdp scripts and connect to the running Chrome:
 
 ```python
 import sys
 sys.path.insert(0, '<browser-cdp-skill-dir>/scripts')
 
-from browser_launcher import BrowserLauncher, BrowserNeedsCDPError
 from cdp_client import CDPClient
 from page_snapshot import PageSnapshot
 from browser_actions import BrowserActions
 
-launcher = BrowserLauncher()
-try:
-    cdp_url = launcher.launch(browser='chrome')
-except BrowserNeedsCDPError as e:
-    # Tell user to allow CDP in chrome://inspect, then wait
-    print(f"⚠️ {e}")
-    sys.exit(1)
-
-client = CDPClient(cdp_url)
+# Connect to Chrome started by start_chrome.sh (port 9222)
+client = CDPClient('ws://localhost:9222/devtools/browser')
 client.connect()
 snapshot = PageSnapshot(client)
 actions = BrowserActions(client, snapshot)
 ```
 
-**Do NOT call `client.close()` or `launcher.stop()` after task** — keep the connection alive for reuse.
+**Do NOT call `client.close()` after task** — keep the connection alive for reuse.
 
 ## Step 1: Navigate to Gemini & Login Check
 
@@ -341,7 +345,7 @@ actions.click_by_ref('eN')
 
 | Scenario | Action |
 |----------|--------|
-| Chrome not running | `launcher.launch()` auto-starts Chrome |
+| Chrome not running | Run `{baseDir}/scripts/start_chrome.sh` to launch |
 | Chrome needs CDP authorization | Show chrome://inspect instructions, wait for user |
 | Gemini not logged in | Take screenshot, show login instructions, STOP and wait for user |
 | Image generation timeout (120s) | Screenshot, report failure, suggest simpler prompt |
