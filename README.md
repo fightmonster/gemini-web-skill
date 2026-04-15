@@ -1,4 +1,4 @@
-# Gemini Creator Skill
+# Gemini Web Creator Skill
 
 Generate AI images, music, and videos via Google Gemini using Chrome DevTools MCP.
 
