@@ -103,14 +103,13 @@ Agent → agent-browser CLI → Chrome (CDP) → Gemini Web UI
 |---|---|---|
 | agent-browser | Yes | Browser automation CLI |
 | Google Chrome | Yes | Browser |
-| Chrome running with `--remote-debugging-port=9222` | Yes | Or use `agent-browser open` to auto-launch |
 | Python 3 + websockets | Optional | Only for video mode file upload |
 
 No ffmpeg needed. Gemini UI provides direct MP3/MP4/PNG download.
 
 ## Version
 
-**1.1.0** — Use `agent-browser` instead of raw Chrome DevTools MCP
+**1.2.0** — Auto-manage Chrome via agent-browser, no manual Chrome setup needed
 
 - Removed all scripts (zero-code skill)
 - Image generation with UI download

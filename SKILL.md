@@ -1,6 +1,6 @@
 ---
 name: gemini-web-skill
-version: 1.1.0
+version: 1.2.0
 description: "Generate AI images, music, and videos via Google Gemini using agent-browser. Use when the user wants to generate an image, create AI art, generate music, create a song, or generate a video with Gemini. NOT for Gemini API calls, Gemini CLI usage, or non-creative tasks. Supports image (default), music, and video generation modes with automatic Pro mode selection and local file download."
 metadata: {"openclaw":{"emoji":"🎨","requires":{"bins":["agent-browser"]},"os":["darwin","linux","win32"]}}
 ---
@@ -9,12 +9,23 @@ metadata: {"openclaw":{"emoji":"🎨","requires":{"bins":["agent-browser"]},"os"
 
 Generate images, music, and videos via Google Gemini, using `agent-browser` for browser automation.
 
+**No manual Chrome management needed.** `agent-browser` handles Chrome startup, connection, and shutdown automatically.
+
 ## Prerequisites
 
 - **agent-browser** installed: `npm i -g agent-browser` or `brew install agent-browser`
-- **Google Chrome** installed
 - Run `agent-browser install` once to download Chrome
 - **Python 3 + websockets** (optional, video mode file upload): `pip install websockets`
+
+## Connection Strategy
+
+`agent-browser` auto-manages Chrome. Just call commands directly — no need to start Chrome manually.
+
+- **Default**: `agent-browser open <url>` — auto-launches Chrome
+- **Existing Chrome on port 9222**: `agent-browser --auto-connect open <url>`
+- **Persistent profile**: `agent-browser --profile ~/.gemini-browser-profile open <url>` — keeps login across sessions
+
+All examples below omit connection flags. Add `--auto-connect` or `--profile <path>` as needed.
 
 ## Arguments
 
@@ -29,25 +40,19 @@ Parse `$ARGUMENTS`:
 
 Generate a filesystem-safe output name from the prompt (slugify, max 40 chars).
 
-## Step 1: Connect to Gemini
-
-Connect to a running Chrome instance (aichrome on port 9222) or let agent-browser auto-discover:
+## Step 1: Open Gemini
 
 ```bash
-agent-browser --cdp 9222 open https://gemini.google.com/app
+agent-browser open https://gemini.google.com/app
 ```
 
-Or if Chrome is already at gemini.google.com:
+Wait for page load, then take a snapshot to check login status:
 
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
-
-Wait for page load, then check login status.
 
 ### Login Detection
-
-Take a snapshot and check:
 
 **Logged in** — snapshot contains:
 - A `textbox` element (like `textbox "为 Gemini 输入提示"` or `textbox "Enter a prompt for Gemini"`)
@@ -75,18 +80,20 @@ Chrome 浏览器已打开，请按以下步骤操作：
 
 Wait for user to confirm, then verify login via `snapshot -i`.
 
+**Do NOT close the browser** after task completion — keep the session alive for reuse.
+
 ## Step 2: Select Pro Mode
 
 **MANDATORY** before any generation.
 
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
 Find the mode picker button (look for `button "Open mode picker"` / `button "打开模式选择器"`), click it:
 
 ```bash
-agent-browser --cdp 9222 click @eN
+agent-browser click @eN
 ```
 
 Re-snapshot to see the dropdown. Check which `menuitem` has `focused`:
@@ -101,56 +108,53 @@ If "Pro" does not exist in dropdown, fall back to "Fast" / "快速".
 
 1. Snapshot to find the prompt textbox:
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
 2. Fill with `#Generate Image: ` prefix:
 ```bash
-agent-browser --cdp 9222 fill @eN "#Generate Image: <prompt text>"
+agent-browser fill @eN "#Generate Image: <prompt text>"
 ```
 
 3. Snapshot to find send button (`button "发送"` / `button "Send"`), then click:
 ```bash
-agent-browser --cdp 9222 click @eN
+agent-browser snapshot -i
+agent-browser click @eN
 ```
 
 If no send button, press Enter:
 ```bash
-agent-browser --cdp 9222 press Enter
+agent-browser press Enter
 ```
 
 ### Wait for Generation
 
 ```bash
-agent-browser --cdp 9222 wait --text "下载完整尺寸的图片" --timeout 120000
+agent-browser wait --text "下载完整尺寸的图片" --timeout 120000
 ```
 
-Or for English UI:
-```bash
-agent-browser --cdp 9222 wait --text "Download full size" --timeout 120000
-```
+Or English UI: `wait --text "Download full size"`
 
-If timeout, take a screenshot to diagnose:
+If timeout, screenshot to diagnose:
 ```bash
-agent-browser --cdp 9222 screenshot
+agent-browser screenshot
 ```
 
 ### Download Image
 
-1. Snapshot to find the download button (`button "下载完整尺寸的图片"` / `button "Download full size image"`):
+1. Snapshot to find download button (`button "下载完整尺寸的图片"` / `button "Download full size image"`):
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
-2. Click it to trigger browser download:
+2. Click to trigger browser download:
 ```bash
-agent-browser --cdp 9222 click @eN
+agent-browser click @eN
 ```
 
-3. Wait for download and verify:
+3. Verify:
 ```bash
 ls -lt ~/Downloads/ | head -5
-file ~/Downloads/<filename>
 ```
 
 Report the saved file path and size to user.
@@ -161,7 +165,7 @@ Report the saved file path and size to user.
 
 1. Fill textbox with `#Generate Music: ` prefix:
 ```bash
-agent-browser --cdp 9222 fill @eN "#Generate Music: <prompt text>"
+agent-browser fill @eN "#Generate Music: <prompt text>"
 ```
 
 2. Click send button or press Enter (same as image).
@@ -169,23 +173,23 @@ agent-browser --cdp 9222 fill @eN "#Generate Music: <prompt text>"
 ### Wait for Generation
 
 ```bash
-agent-browser --cdp 9222 wait --text "下载音乐作品" --timeout 180000
+agent-browser wait --text "下载音乐作品" --timeout 180000
 ```
 
-Note: do NOT wait for "Music" or "播放视频" — they appear before generation is complete. Only "下载音乐作品" / "Download track" means the music is ready.
+Note: Only "下载音乐作品" / "Download track" means the music is ready. Ignore "Music" or "播放视频".
 
 ### Download Music (no ffmpeg needed)
 
 1. The "Download track" / "下载音乐作品" button is a dropdown. Click it:
 ```bash
-agent-browser --cdp 9222 snapshot -i
-agent-browser --cdp 9222 click @eN
+agent-browser snapshot -i
+agent-browser click @eN
 ```
 
-2. Re-snapshot to see menu items. Click "纯音频 MP3 音轨" / "Audio only MP3 track" for MP3:
+2. Re-snapshot, click "纯音频 MP3 音轨" / "Audio only MP3 track" for MP3:
 ```bash
-agent-browser --cdp 9222 snapshot -i
-agent-browser --cdp 9222 click @eN
+agent-browser snapshot -i
+agent-browser click @eN
 ```
 
 3. To also get MP4 with cover art, click the download button again, then click the cover art option.
@@ -193,7 +197,6 @@ agent-browser --cdp 9222 click @eN
 4. Verify:
 ```bash
 ls -lt ~/Downloads/ | head -5
-file ~/Downloads/<filename>
 ```
 
 Report the saved file path(s) and size(s) to user.
@@ -206,12 +209,18 @@ This step only executes if the user provided a file path argument.
 
 1. Snapshot to find "Add files" button (`button "Open upload file menu"` / `button "打开文件上传菜单"`):
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
 2. Click it, then click "Upload files" / "上传文件" menuitem.
 
-3. Upload the file via CDP `DOM.setFileInputFiles` using Python (agent-browser does not natively support file upload):
+3. Upload via CDP (agent-browser does not natively support file upload). Get the CDP URL first:
+
+```bash
+agent-browser get cdp-url
+```
+
+Then upload using Python:
 
 ```bash
 cat << 'PYEOF' | python3 -
@@ -227,10 +236,7 @@ async def cdp(ws, mid, method, params=None):
 
 async def main():
     import urllib.request
-    cdp_url = "http://localhost:9222/json"
-    pages = json.loads(urllib.request.urlopen(cdp_url).read())
-    ws_url = next((p["webSocketDebuggerUrl"] for p in pages if "gemini" in p.get("url","")), None)
-    if not ws_url: print("ERROR: No Gemini page found"); return
+    ws_url = "WS_URL_FROM_GET_CDP_URL"
     async with websockets.connect(ws_url, max_size=50*1024*1024) as ws:
         r = await cdp(ws, 1, "DOM.getDocument", {"depth": -1, "pierce": True})
         root = r.get("result", {}).get("root", {})
@@ -244,18 +250,18 @@ asyncio.run(main())
 PYEOF
 ```
 
-Replace `FILE_PATH_HERE` with the resolved absolute path.
+Replace `WS_URL_FROM_GET_CDP_URL` with the output of `get cdp-url`, and `FILE_PATH_HERE` with the resolved absolute path.
 
-4. Wait and verify file thumbnail appeared:
+4. Verify file thumbnail appeared:
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
 ### Submit Prompt
 
-1. Fill textbox with `#Generate Video: ` prefix (or generic prompt if only file provided):
+1. Fill textbox with `#Generate Video: ` prefix:
 ```bash
-agent-browser --cdp 9222 fill @eN "#Generate Video: <prompt text>"
+agent-browser fill @eN "#Generate Video: <prompt text>"
 ```
 
 2. Click send button or press Enter.
@@ -263,7 +269,7 @@ agent-browser --cdp 9222 fill @eN "#Generate Video: <prompt text>"
 ### Wait for Generation
 
 ```bash
-agent-browser --cdp 9222 wait --text "下载视频" --timeout 300000
+agent-browser wait --text "下载视频" --timeout 300000
 ```
 
 Video generation may take up to 5 minutes.
@@ -272,18 +278,17 @@ Video generation may take up to 5 minutes.
 
 1. Snapshot to find download button (`button "下载视频"` / `button "Download video"`):
 ```bash
-agent-browser --cdp 9222 snapshot -i
+agent-browser snapshot -i
 ```
 
 2. Click to trigger browser download:
 ```bash
-agent-browser --cdp 9222 click @eN
+agent-browser click @eN
 ```
 
 3. Verify:
 ```bash
 ls -lt ~/Downloads/ | head -5
-file ~/Downloads/<filename>.mp4
 ```
 
 Report the saved file path and size to user.
@@ -292,7 +297,7 @@ Report the saved file path and size to user.
 
 | Scenario | Action |
 |----------|--------|
-| Chrome not running | Tell user to start Chrome with `--remote-debugging-port=9222` |
+| Chrome not running | `agent-browser open` auto-launches Chrome, no manual action needed |
 | Gemini not logged in | Show login instructions, STOP and wait for user |
 | Image generation timeout (120s) | Screenshot, report failure, suggest simpler prompt |
 | Music generation timeout (180s) | Screenshot, report failure, suggest simpler prompt |
@@ -300,6 +305,7 @@ Report the saved file path and size to user.
 | Download button not found | Re-snapshot, check for `busy` state, wait and retry |
 | Pro mode unavailable | Fall back to Fast/快速 mode |
 | File upload fails | Check file path exists, verify Python websockets installed |
+| Browser daemon stale | Run `agent-browser close` then retry |
 
 ## Output Convention
 
