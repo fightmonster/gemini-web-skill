@@ -1,25 +1,31 @@
 # Gemini Web Creator Skill
 
-Generate AI images, music, and videos via Google Gemini using `agent-browser`.
+Generate AI images, music, and videos via Google Gemini using Chrome DevTools MCP (browser-cdp).
 
 Works with **OpenClaw** and **Claude Code**.
 
 ## Install
 
 ```bash
-# Install agent-browser (skip if already installed)
-npm i -g agent-browser
-agent-browser install
-
 # Install this skill (OpenClaw)
 npx skills add https://github.com/fightmonster/gemini-web-skill
+
+# Configure Chrome DevTools MCP in .mcp.json
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/chrome-devtools-mcp@latest"]
+    }
+  }
+}
 ```
 
 ## Usage
 
 ### Image
 
-Supports aspect ratios (`--ar 16:9`, `--ar 9:16`, `--ar 1:1`), photography styles, lighting, and composition cues.
+Supports aspect ratios, photography styles, lighting, and composition cues.
 
 ```bash
 # Basic
@@ -79,39 +85,37 @@ Describe **multiple sequential actions** for smooth results. Each sentence = one
 
 Tip: Describe 3-5 distinct actions for best results. Use cinematography terms like `镜头拉近` (zoom in), `慢动作` (slow motion), `延时摄影` (time-lapse), `环绕镜头` (orbit shot).
 
-
 ## First Time
 
-On first use, Chrome opens with a fresh profile (no login). The skill detects this and shows login instructions. After logging into your Google account, subsequent uses are automatic.
+On first use, the skill launches a new Chrome instance with a fresh profile. It detects the login page and shows instructions. After logging into your Google account, the profile is saved — subsequent uses are automatic.
 
 ## How It Works
 
 ```
-Agent → agent-browser CLI → Chrome (CDP) → Gemini Web UI
+Agent → Chrome DevTools MCP → Chrome (CDP) → Gemini Web UI
 ```
 
-1. Connects to Chrome via CDP (port 9222)
-2. Navigates to Gemini, selects Pro mode
-3. Submits generation prompt via `fill` + `click`
-4. Waits for completion via `wait --text`
-5. Clicks Gemini UI download buttons
-6. Files saved to `~/Downloads/` by Chrome
+1. `start_chrome.sh` launches Chrome with remote debugging (port 9222)
+2. Agent navigates to Gemini via MCP tools (`navigate_page`, `click`, `fill`)
+3. Selects Pro mode, submits generation prompt
+4. Waits for completion, clicks Gemini UI download buttons
+5. Files saved to `~/Downloads/` by Chrome
 
 ## Prerequisites
 
 | Dependency | Required? | Notes |
 |---|---|---|
-| agent-browser | Yes | Browser automation CLI |
 | Google Chrome | Yes | Browser |
+| Chrome DevTools MCP Server | Yes | `@anthropic-ai/chrome-devtools-mcp` |
 | Python 3 + websockets | Optional | Only for video mode file upload |
 
 No ffmpeg needed. Gemini UI provides direct MP3/MP4/PNG download.
 
 ## Version
 
-**1.2.0** — Auto-manage Chrome via agent-browser, no manual Chrome setup needed
+**1.3.0** — Use Chrome DevTools MCP (browser-cdp) for browser automation
 
-- Removed all scripts (zero-code skill)
+- Auto-start Chrome via `start_chrome.sh` with persistent profile
 - Image generation with UI download
 - Music generation with MP3/MP4 download
 - Video generation with reference file upload support
