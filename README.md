@@ -7,11 +7,11 @@ Works with **OpenClaw** and **Claude Code**.
 ## Install
 
 ```bash
-# Install agent-browser first
+# Install agent-browser (skip if already installed)
 npm i -g agent-browser
 agent-browser install
 
-# Install this skill
+# Install this skill (OpenClaw)
 npx skills add https://github.com/fightmonster/gemini-web-skill
 ```
 
