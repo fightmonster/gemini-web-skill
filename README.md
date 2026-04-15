@@ -10,7 +10,7 @@ Works with **OpenClaw** and **Claude Code**.
 
 ```bash
 # Option 1: From GitHub
-openclaw skills install https://github.com/luojun/gemini-web-skill
+openclaw skills install https://github.com/fightmonster/gemini-web-skill
 
 # Option 2: Copy manually
 cp -r gemini-web-skill ~/.openclaw/skills/gemini-web-skill
